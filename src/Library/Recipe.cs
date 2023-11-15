@@ -6,6 +6,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO.Compression;
+using System.Linq;
+using System.Threading;
 
 namespace Full_GRASP_And_SOLID
 {
@@ -15,6 +18,9 @@ namespace Full_GRASP_And_SOLID
         private IList<BaseStep> steps = new List<BaseStep>();
 
         public Product FinalProduct { get; set; }
+
+        public bool Cooked {get; private set;}= false;
+
 
         // Agregado por Creator
         public void AddStep(Product input, double quantity, Equipment equipment, int time)
@@ -62,5 +68,46 @@ namespace Full_GRASP_And_SOLID
 
             return result;
         }
+
+        public int GetCookTime(){
+            int sum = 0;
+            foreach (Step step in steps.OfType<Step>())
+            {
+                sum += step.Time;
+                
+            }
+            return sum;
+        }
+
+        public void Cook()
+        {
+            if (!Cooked)
+            {
+                int cookTime = GetCookTime();
+                CountdownTimer countdownTimer = new CountdownTimer(); 
+                RecipeAdapter recipeAdapter = new RecipeAdapter(this);
+                countdownTimer.Register(cookTime, recipeAdapter);
+            }
+            else
+            {
+                Console.WriteLine("La receta ya ha sido cocinada.");
+            } 
+
+        }
+        public class RecipeAdapter : TimerClient
+        {
+            private Recipe recipe;
+            public RecipeAdapter(Recipe recipe)
+            {
+                this.recipe = recipe;
+
+            }
+
+            public void TimeOut()
+            {
+                this.recipe.Cooked = true;
+            }
+        }
     }
+
 }
